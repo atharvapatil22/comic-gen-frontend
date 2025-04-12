@@ -1,21 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Loader from "./components/Loader";
 
 export default function Home() {
-  const [userInput, setUserInput] = useState("")
-  
+  const [userInput, setUserInput] = useState("");
+
   const [showSnackbar, setShowSnackbar] = useState("");
   const [showLoader, setShowLoader] = useState(false);
 
   const [comicPages, setComicPages] = useState<string[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
-  const handleGenerate = async () => {
-    // _todo_ Replace with dynamic value
-    const apiUrl = "http://127.0.0.1:5000";
+  useEffect(() => {
+    testConnection();
+  }, []);
 
+  const testConnection = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/test-connection`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("API Success:", data);
+        setShowSnackbar("Backend Server Spun Up!✅");
+        setTimeout(() => setShowSnackbar(""), 3000);
+      } else {
+        console.log("API ERROR:", data);
+      }
+    } catch (error) {
+      console.error("NETWORK ERROR:", error);
+      setShowSnackbar("Network Error occurred!");
+      setTimeout(() => setShowSnackbar(""), 3000);
+    }
+  };
+
+  const handleGenerate = async () => {
     if (!userInput.trim()) {
       setShowSnackbar("Please enter a valid recipe before generating!");
       setTimeout(() => setShowSnackbar(""), 3000);
@@ -27,29 +56,31 @@ export default function Home() {
     setShowLoader(true);
 
     try {
-      const response = await fetch(`${apiUrl}/run_crew`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ input_text: userInput }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/run_crew`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ input_text: userInput }),
+        }
+      );
 
       const data = await response.json();
 
       if (response.ok) {
         console.log("API Success:", data);
-        setComicPages(data.res)
+        setComicPages(data.res);
       } else if (response.status >= 400 && response.status < 500) {
         console.log("CLIENT ERROR:", data);
         setShowSnackbar(data.message);
         setTimeout(() => setShowSnackbar(""), 3000);
-      } else if (response.status >= 500 && response.status < 600){
+      } else if (response.status >= 500 && response.status < 600) {
         console.log("SERVER ERROR:", data);
         setShowSnackbar(data.message);
         setTimeout(() => setShowSnackbar(""), 3000);
       }
-
     } catch (error) {
       console.error("NETWORK ERROR:", error);
       setShowSnackbar("Network Error occurred!");
