@@ -1,103 +1,175 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import Loader from "./components/Loader";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [userInput, setUserInput] = useState("")
+  
+  const [showSnackbar, setShowSnackbar] = useState("");
+  const [showLoader, setShowLoader] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const [comicPages, setComicPages] = useState<string[]>([]);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+
+  const handleGenerate = async () => {
+    // _todo_ Replace with dynamic value
+    const apiUrl = "http://127.0.0.1:5000";
+
+    if (!userInput.trim()) {
+      setShowSnackbar("Please enter a valid recipe before generating!");
+      setTimeout(() => setShowSnackbar(""), 3000);
+
+      return;
+    }
+
+    console.log("Calling the '/run_crew' API");
+    setShowLoader(true);
+
+    try {
+      const response = await fetch(`${apiUrl}/run_crew`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input_text: userInput }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("API Success:", data);
+        setComicPages(data.res)
+      } else if (response.status >= 400 && response.status < 500) {
+        console.log("CLIENT ERROR:", data);
+        setShowSnackbar(data.message);
+        setTimeout(() => setShowSnackbar(""), 3000);
+      } else if (response.status >= 500 && response.status < 600){
+        console.log("SERVER ERROR:", data);
+        setShowSnackbar(data.message);
+        setTimeout(() => setShowSnackbar(""), 3000);
+      }
+
+    } catch (error) {
+      console.error("NETWORK ERROR:", error);
+      setShowSnackbar("Network Error occurred!");
+      setTimeout(() => setShowSnackbar(""), 3000);
+    }
+    setShowLoader(false);
+  };
+
+  return (
+    <main className="min-h-screen flex flex-col">
+      <nav className="w-full h-[70px] flex items-center justify-between px-6 border-b shadow-sm">
+        <h1 className="text-xl font-semibold">Recipe Comic Generator</h1>
+        <button
+          className="text-2xl focus:outline-none"
+          onClick={() => {
+            // no action for now
+          }}
+        >
+          &#9776; {/* Unicode hamburger symbol */}
+        </button>
+      </nav>
+
+      {/* Home page content */}
+      <div className="home-wrapper flex flex-1">
+        {/* User input section */}
+        <div className="w-1/2 flex flex-col justify-center items-center gap-4 p-18">
+          <h2 className="text-3xl font-semibold self-start">
+            Enter your recipe
+          </h2>
+
+          <textarea
+            placeholder="Enter your recipe..."
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            rows={12}
+            className="w-1/1 border border-gray-300 rounded resize-none overflow-y-auto p-2 focus:outline-none"
+          />
+
+          <div className="w-1/1 flex justify-end">
+            <button
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
+              onClick={handleGenerate}
+            >
+              Generate
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* Comic poster section */}
+        <div className="w-1/2 bg-yellow-200 text-white flex flex-col justify-between p-4">
+          {showLoader ? (
+            <div className="flex flex-col justify-center items-center h-[100%]">
+              <h4 className="text-1xl font-semibold text-black">
+                Generating Comic
+              </h4>
+              <Loader />
+            </div>
+          ) : (
+            <>
+              {/* Top - Download Button */}
+              {comicPages.length > 0 && (
+                <div className="flex justify-end">
+                  <button className="px-4 py-2 bg-white text-red-600 font-medium rounded hover:bg-gray-100 cursor-pointer">
+                    Download Full Comic
+                  </button>
+                </div>
+              )}
+
+              {/* Middle - Image or Empty */}
+              <div className="flex-1 flex justify-center items-center">
+                {comicPages.length === 0 ? (
+                  <p className="text-xl italic text-black">empty</p>
+                ) : (
+                  <img
+                    src={`data:image/png;base64,${comicPages[currentPageIndex]}`}
+                    alt={`Comic ${currentPageIndex + 1}`}
+                    className="max-h-[100%] aspect-[3/4] object-contain rounded shadow-md"
+                  />
+                )}
+              </div>
+
+              {/* Bottom - Navigation */}
+              {comicPages.length > 0 && (
+                <div className="flex justify-center items-center gap-4 mt-4">
+                  <button
+                    className="text-2xl px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100"
+                    onClick={() =>
+                      setCurrentPageIndex((prev) => Math.max(prev - 1, 0))
+                    }
+                    disabled={currentPageIndex === 0}
+                  >
+                    ←
+                  </button>
+                  <span className="text-lg">{`${currentPageIndex + 1} / ${
+                    comicPages.length
+                  }`}</span>
+                  <button
+                    className="text-2xl px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100"
+                    onClick={() =>
+                      setCurrentPageIndex((prev) =>
+                        Math.min(prev + 1, comicPages.length - 1)
+                      )
+                    }
+                    disabled={currentPageIndex === comicPages.length - 1}
+                  >
+                    →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Snackbar */}
+        {!!showSnackbar && (
+          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-md">
+            {showSnackbar}
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
