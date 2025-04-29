@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Loader from "./components/Loader";
+import { jsPDF } from "jspdf";
 
 export default function Home() {
   const [userInput, setUserInput] = useState("");
@@ -89,6 +90,35 @@ export default function Home() {
       setTimeout(() => setShowSnackbar(""), 3000);
     }
     setShowLoader(false);
+  };
+
+  const downloadPDF = () => {
+    if (comicPages.length === 0) {
+      setShowSnackbar("No pages to download");
+      setTimeout(() => setShowSnackbar(""), 3000);
+
+      return;
+    }
+    const base64Images = comicPages;
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "px",
+      format: [595.28, 841.89], // A4 size in points
+    });
+
+    base64Images.forEach((imgData, index) => {
+      if (index !== 0) pdf.addPage();
+      pdf.addImage(
+        `data:image/png;base64,${imgData}`,
+        "PNG",
+        0,
+        0,
+        595.28,
+        841.89
+      );
+    });
+
+    pdf.save("comic.pdf");
   };
 
   return (
@@ -187,7 +217,10 @@ export default function Home() {
                 {/* Top - Download Button */}
                 {comicPages.length > 0 && (
                   <div className="flex justify-center my-2">
-                    <button className="px-4 py-2 bg-yellow-400 text-black font-medium rounded hover:bg-white cursor-pointer">
+                    <button
+                      className="px-4 py-2 bg-yellow-400 text-black font-medium rounded hover:bg-white cursor-pointer"
+                      onClick={downloadPDF}
+                    >
                       Download Full Comic
                     </button>
                   </div>
