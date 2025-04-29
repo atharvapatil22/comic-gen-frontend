@@ -91,7 +91,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col ">
-      <div className="absolute inset-0 bg-[url('/app_bg.png')] bg-cover bg-center opacity-70  -z-10" style={{filter: 'blur(2px)'}} />
+      <div
+        className="absolute inset-0 bg-[url('/app_bg.png')] bg-cover bg-center opacity-70  -z-10"
+        style={{ filter: "blur(2px)" }}
+      />
       <nav className="w-full h-[70px] flex items-center justify-between px-6 border-b-4 shadow-sm bg bg-[#edc032] text-black">
         <h1 className="text-xl font-semibold">Recipe Comic Generator</h1>
         <button
@@ -107,92 +110,96 @@ export default function Home() {
       {/* Home page content */}
       <div className="home-wrapper flex flex-1">
         {/* User input section */}
-        <div className="w-1/2 flex flex-col justify-center items-center gap-4 p-18">
-          <h2 className="text-3xl font-semibold self-start">
-            Enter your recipe
-          </h2>
+        <div className="w-1/2 flex items-center justify-center">
+          <div className="w-[80%] h-[80%] border-4 border-black bg-gray-100 justify-between text-black">
+            <h2 className="text-3xl font-semibold self-start text-black">
+              Enter your recipe
+            </h2>
 
-          <textarea
-            placeholder="Enter your recipe..."
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            rows={12}
-            className="w-1/1 border border-gray-300 rounded resize-none overflow-y-auto p-2 focus:outline-none"
-          />
+            <textarea
+              placeholder="Enter your recipe..."
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              rows={12}
+              className="w-1/1 border border-gray-300 rounded resize-none overflow-y-auto p-2 focus:outline-none"
+            />
 
-          <div className="w-1/1 flex justify-end">
-            <button
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
-              onClick={handleGenerate}
-            >
-              Generate
-            </button>
+            <div className="w-1/1 flex justify-end">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
+                onClick={handleGenerate}
+              >
+                Generate
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Comic poster section */}
-        <div className="w-1/2 bg-yellow-200 text-white flex flex-col justify-between p-2 my-8 mx-30 border-4 border-black">
-          {showLoader ? (
-            <div className="flex flex-col justify-center items-center h-[100%]">
-              <h4 className="text-1xl font-semibold text-black">
-                Generating Comic
-              </h4>
-              <Loader />
-            </div>
-          ) : (
-            <>
-              {/* Top - Download Button */}
-              {comicPages.length > 0 && (
-                <div className="flex justify-end">
-                  <button className="px-4 py-2 bg-white text-red-600 font-medium rounded hover:bg-gray-100 cursor-pointer">
-                    Download Full Comic
-                  </button>
-                </div>
-              )}
-
-              {/* Middle - Image or Empty */}
-              <div className="flex-1 flex justify-center items-center">
-                {comicPages.length === 0 ? (
-                  <p className="text-xl italic text-black">empty</p>
-                ) : (
-                  <img
-                    src={`data:image/png;base64,${comicPages[currentPageIndex]}`}
-                    alt={`Comic ${currentPageIndex + 1}`}
-                    className="max-h-[100%] aspect-[3/4] object-contain rounded shadow-md"
-                  />
-                )}
+        <div className="w-1/2 flex items-center justify-center">
+          <div className="w-[80%] h-[80%] border-4 border-black text-white bg-gray-100 justify-between">
+            {showLoader ? (
+              <div className="flex flex-col justify-center items-center h-[100%]">
+                <h4 className="text-1xl font-semibold text-black">
+                  Generating Comic
+                </h4>
+                <Loader />
               </div>
+            ) : (
+              <>
+                {/* Top - Download Button */}
+                {comicPages.length > 0 && (
+                  <div className="flex justify-end">
+                    <button className="px-4 py-2 bg-white text-red-600 font-medium rounded hover:bg-gray-100 cursor-pointer">
+                      Download Full Comic
+                    </button>
+                  </div>
+                )}
 
-              {/* Bottom - Navigation */}
-              {comicPages.length > 0 && (
-                <div className="flex justify-center items-center gap-4 mt-4">
-                  <button
-                    className="text-2xl px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100"
-                    onClick={() =>
-                      setCurrentPageIndex((prev) => Math.max(prev - 1, 0))
-                    }
-                    disabled={currentPageIndex === 0}
-                  >
-                    ←
-                  </button>
-                  <span className="text-lg">{`${currentPageIndex + 1} / ${
-                    comicPages.length
-                  }`}</span>
-                  <button
-                    className="text-2xl px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100"
-                    onClick={() =>
-                      setCurrentPageIndex((prev) =>
-                        Math.min(prev + 1, comicPages.length - 1)
-                      )
-                    }
-                    disabled={currentPageIndex === comicPages.length - 1}
-                  >
-                    →
-                  </button>
+                {/* Middle - Image or Empty */}
+                <div className="flex-1 flex justify-center items-center">
+                  {comicPages.length === 0 ? (
+                    <p className="text-xl italic text-black">empty</p>
+                  ) : (
+                    <img
+                      src={`data:image/png;base64,${comicPages[currentPageIndex]}`}
+                      alt={`Comic ${currentPageIndex + 1}`}
+                      className="max-h-[100%] aspect-[3/4] object-contain rounded shadow-md"
+                    />
+                  )}
                 </div>
-              )}
-            </>
-          )}
+
+                {/* Bottom - Navigation */}
+                {comicPages.length > 0 && (
+                  <div className="flex justify-center items-center gap-4 mt-4">
+                    <button
+                      className="text-2xl px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100"
+                      onClick={() =>
+                        setCurrentPageIndex((prev) => Math.max(prev - 1, 0))
+                      }
+                      disabled={currentPageIndex === 0}
+                    >
+                      ←
+                    </button>
+                    <span className="text-lg">{`${currentPageIndex + 1} / ${
+                      comicPages.length
+                    }`}</span>
+                    <button
+                      className="text-2xl px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100"
+                      onClick={() =>
+                        setCurrentPageIndex((prev) =>
+                          Math.min(prev + 1, comicPages.length - 1)
+                        )
+                      }
+                      disabled={currentPageIndex === comicPages.length - 1}
+                    >
+                      →
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         {/* Snackbar */}
