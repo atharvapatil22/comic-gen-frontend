@@ -58,13 +58,14 @@ export default function Home() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/run_crew`,
+        `${process.env.NEXT_PUBLIC_API_URL}/run-crew`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ input_text: userInput }),
+          // body: JSON.stringify({ input_text: userInput }),
+          body: userInput,
         }
       );
 
@@ -147,6 +148,8 @@ export default function Home() {
                     <textarea
                       placeholder="Write your custom recipe here..."
                       className="w-full h-full resize-none  rounded p-2 focus:outline-none "
+                      value={userInput}
+                      onChange={(e) => setUserInput(e.target.value)}
                     />
                   </div>
                 )}
@@ -160,7 +163,10 @@ export default function Home() {
             </div>
 
             {/* Generate Comic Button */}
-            <button className="mt-6 ml-auto px-6 py-2 bg-yellow-400 text-black  border-2 border-black rounded hover:bg-yellow-300 transition cursor-pointer">
+            <button
+              className="mt-6 ml-auto px-6 py-2 bg-yellow-400 text-black  border-2 border-black rounded hover:bg-yellow-300 transition cursor-pointer"
+              onClick={handleGenerate}
+            >
               Generate Comic
             </button>
           </div>
@@ -168,7 +174,7 @@ export default function Home() {
 
         {/* Comic poster section */}
         <div className="w-1/2 flex items-center justify-center">
-          <div className="w-[70%] h-[90%] border-4 border-black text-white bg-gray-100 justify-between">
+          <div className="w-[70%] h-[90%] border-4 border-black text-white bg-gray-100 justify-between ">
             {showLoader ? (
               <div className="flex flex-col justify-center items-center h-[100%]">
                 <h4 className="text-1xl font-semibold text-black">
@@ -180,22 +186,24 @@ export default function Home() {
               <>
                 {/* Top - Download Button */}
                 {comicPages.length > 0 && (
-                  <div className="flex justify-end">
-                    <button className="px-4 py-2 bg-white text-red-600 font-medium rounded hover:bg-gray-100 cursor-pointer">
+                  <div className="flex justify-center my-2">
+                    <button className="px-4 py-2 bg-yellow-400 text-black font-medium rounded hover:bg-white cursor-pointer">
                       Download Full Comic
                     </button>
                   </div>
                 )}
 
                 {/* Middle - Image or Empty */}
-                <div className="flex-1 flex justify-center items-center">
+                <div className="flex-1 flex justify-center items-center ">
                   {comicPages.length === 0 ? (
-                    <p className="text-xl italic text-black">empty</p>
+                    <p className="text-xl italic text-gray-600 mt-40">
+                      Generated comic will apear here
+                    </p>
                   ) : (
                     <img
                       src={`data:image/png;base64,${comicPages[currentPageIndex]}`}
                       alt={`Comic ${currentPageIndex + 1}`}
-                      className="max-h-[100%] aspect-[3/4] object-contain rounded shadow-md"
+                      className="max-h-[400px] w-auto object-contain rounded shadow-md"
                     />
                   )}
                 </div>
@@ -204,7 +212,7 @@ export default function Home() {
                 {comicPages.length > 0 && (
                   <div className="flex justify-center items-center gap-4 mt-4">
                     <button
-                      className="text-2xl px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100"
+                      className="text-2xl px-3 py-1 bg-white bg-yellow-400 rounded hover:bg-white text-black cursor-pointer"
                       onClick={() =>
                         setCurrentPageIndex((prev) => Math.max(prev - 1, 0))
                       }
@@ -212,11 +220,11 @@ export default function Home() {
                     >
                       ←
                     </button>
-                    <span className="text-lg">{`${currentPageIndex + 1} / ${
-                      comicPages.length
-                    }`}</span>
+                    <span className="text-lg text-black">{`${
+                      currentPageIndex + 1
+                    } / ${comicPages.length}`}</span>
                     <button
-                      className="text-2xl px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100"
+                      className="text-2xl px-3 py-1 bg-white bg-yellow-400 rounded hover:bg-white text-black cursor-pointer"
                       onClick={() =>
                         setCurrentPageIndex((prev) =>
                           Math.min(prev + 1, comicPages.length - 1)
