@@ -11,6 +11,7 @@ export default function Home() {
 
   const [comicPages, setComicPages] = useState<string[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [selectedTab, setSelectedTab] = useState("custom");
 
   useEffect(() => {
     testConnection();
@@ -93,10 +94,10 @@ export default function Home() {
     <main className="min-h-screen flex flex-col ">
       <div
         className="absolute inset-0 bg-[url('/app_bg.png')] bg-cover bg-center opacity-70  -z-10"
-        style={{ filter: "blur(2px)" }}
+        // style={{ filter: "blur(2px)" }}
       />
-      <nav className="w-full h-[70px] flex items-center justify-between px-6 border-b-4 shadow-sm bg bg-[#edc032] text-black">
-        <h1 className="text-xl font-semibold">Recipe Comic Generator</h1>
+      <nav className="w-full h-[70px] flex items-center justify-between px-6 border-b-4 shadow-sm bg text-black bg-gray-100 ">
+        <h1 className="text-xl font-semibold ">Recipe Comic Generator</h1>
         <button
           className="text-2xl focus:outline-none"
           onClick={() => {
@@ -111,33 +112,63 @@ export default function Home() {
       <div className="home-wrapper flex flex-1">
         {/* User input section */}
         <div className="w-1/2 flex items-center justify-center">
-          <div className="w-[80%] h-[80%] border-4 border-black bg-gray-100 justify-between text-black">
-            <h2 className="text-3xl font-semibold self-start text-black">
-              Enter your recipe
-            </h2>
+          <div className="w-[70%] h-[90%] border-4 border-black bg-gray-100  text-black p-4 flex flex-col">
+            <h2 className="text-2xl font-semibold">Enter your recipe</h2>
 
-            <textarea
-              placeholder="Enter your recipe..."
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              rows={12}
-              className="w-1/1 border border-gray-300 rounded resize-none overflow-y-auto p-2 focus:outline-none"
-            />
+            <div>
+              {/* Tab Headers */}
+              <div className="flex space-x-4 border-b-2 border-black mt-4">
+                <button
+                  onClick={() => setSelectedTab("custom")}
+                  className={` px-4 py-2 rounded-t-md cursor-pointer ${
+                    selectedTab === "custom"
+                      ? "bg-white border-2 border-black border-b-0 font-medium"
+                      : "hover:bg-gray-300"
+                  }`}
+                >
+                  Custom Recipe
+                </button>
+                <button
+                  onClick={() => setSelectedTab("ai")}
+                  className={`px-4 py-2 rounded-t-md cursor-pointer ${
+                    selectedTab === "ai"
+                      ? "bg-white border-2 border-black border-b-0 font-medium"
+                      : "hover:bg-gray-300"
+                  }`}
+                >
+                  AI Generated Recipe
+                </button>
+              </div>
 
-            <div className="w-1/1 flex justify-end">
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
-                onClick={handleGenerate}
-              >
-                Generate
-              </button>
+              {/* Tab Content */}
+              <div className=" border-2 border-black border-t-0 bg-white h-[300px]">
+                {selectedTab === "custom" && (
+                  <div className="h-full">
+                    <textarea
+                      placeholder="Write your custom recipe here..."
+                      className="w-full h-full resize-none  rounded p-2 focus:outline-none "
+                    />
+                  </div>
+                )}
+                {selectedTab === "ai" && (
+                  <div>
+                    {/* Replace with your AI recipe generation UI */}
+                    <p>This is the AI generated recipe interface.</p>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Generate Comic Button */}
+            <button className="mt-6 ml-auto px-6 py-2 bg-yellow-400 text-black  border-2 border-black rounded hover:bg-yellow-300 transition cursor-pointer">
+              Generate Comic
+            </button>
           </div>
         </div>
 
         {/* Comic poster section */}
         <div className="w-1/2 flex items-center justify-center">
-          <div className="w-[80%] h-[80%] border-4 border-black text-white bg-gray-100 justify-between">
+          <div className="w-[70%] h-[90%] border-4 border-black text-white bg-gray-100 justify-between">
             {showLoader ? (
               <div className="flex flex-col justify-center items-center h-[100%]">
                 <h4 className="text-1xl font-semibold text-black">
