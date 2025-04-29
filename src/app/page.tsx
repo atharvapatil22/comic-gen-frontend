@@ -90,8 +90,9 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col">
-      <nav className="w-full h-[70px] flex items-center justify-between px-6 border-b shadow-sm">
+    <main className="min-h-screen flex flex-col ">
+      <div className="absolute inset-0 bg-[url('/app_bg.png')] bg-cover bg-center opacity-70  -z-10" style={{filter: 'blur(2px)'}} />
+      <nav className="w-full h-[70px] flex items-center justify-between px-6 border-b-4 shadow-sm bg bg-[#edc032] text-black">
         <h1 className="text-xl font-semibold">Recipe Comic Generator</h1>
         <button
           className="text-2xl focus:outline-none"
@@ -130,7 +131,7 @@ export default function Home() {
         </div>
 
         {/* Comic poster section */}
-        <div className="w-1/2 bg-yellow-200 text-white flex flex-col justify-between p-4">
+        <div className="w-1/2 bg-yellow-200 text-white flex flex-col justify-between p-2 my-8 mx-30 border-4 border-black">
           {showLoader ? (
             <div className="flex flex-col justify-center items-center h-[100%]">
               <h4 className="text-1xl font-semibold text-black">
