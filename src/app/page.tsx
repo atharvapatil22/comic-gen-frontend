@@ -9,6 +9,7 @@ export default function Home() {
 
   const [showSnackbar, setShowSnackbar] = useState("");
   const [showLoader, setShowLoader] = useState(false);
+  const [snackSuccess, setSnackSuccess] = useState(false);
 
   const [comicPages, setComicPages] = useState<string[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -34,8 +35,12 @@ export default function Home() {
 
       if (response.ok) {
         console.log("API Success:", data);
+        setSnackSuccess(true);
         setShowSnackbar("Backend Server Spun Up!✅");
-        setTimeout(() => setShowSnackbar(""), 3000);
+        setTimeout(() => {
+          setShowSnackbar("");
+          setSnackSuccess(false);
+        }, 3000);
       } else {
         console.log("API ERROR:", data);
       }
@@ -276,7 +281,11 @@ export default function Home() {
 
         {/* Snackbar */}
         {!!showSnackbar && (
-          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-md">
+          <div
+            className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 ${
+              snackSuccess ? "bg-green-500" : "bg-red-500"
+            } text-black px-4 py-2 rounded shadow-md`}
+          >
             {showSnackbar}
           </div>
         )}
