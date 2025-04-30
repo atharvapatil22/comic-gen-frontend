@@ -70,8 +70,8 @@ export default function Home() {
           headers: {
             "Content-Type": "application/json",
           },
-          // body: JSON.stringify({ input_text: userInput }),
-          body: userInput,
+          body: JSON.stringify({ input_text: userInput }),
+          // body: userInput,
         }
       );
 
