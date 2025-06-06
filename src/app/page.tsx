@@ -5,10 +5,13 @@ import Loader from "./components/Loader";
 import { jsPDF } from "jspdf";
 
 export default function Home() {
-  const [userInput, setUserInput] = useState("");
+  const [customRecipe, setCustomRecipe] = useState("");
+  const [dishName, setDishName] = useState("");
+  const [aiRecipe, setAiRecipe] = useState("");
 
   const [showSnackbar, setShowSnackbar] = useState("");
-  const [showLoader, setShowLoader] = useState(false);
+  const [showComicLoader, setShowComicLoader] = useState(false);
+  const [showRecipeLoader, setShowRecipeLoader] = useState(false);
   const [snackSuccess, setSnackSuccess] = useState(false);
 
   const [comicPages, setComicPages] = useState<string[]>([]);
@@ -51,16 +54,66 @@ export default function Home() {
     }
   };
 
-  const handleGenerate = async () => {
-    if (!userInput.trim()) {
-      setShowSnackbar("Please enter a valid recipe before generating!");
+  const handleGenerateRecipe = async () => {
+    if (!dishName.trim()) {
+      setShowSnackbar("Please enter a dish name before submitting!");
       setTimeout(() => setShowSnackbar(""), 3000);
 
       return;
     }
 
-    console.log("Calling the '/run_crew' API");
-    setShowLoader(true);
+    console.log("Calling the '/generate-recipe' API");
+    setShowRecipeLoader(true);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/generate-recipe`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            dish_name: dishName,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("API Success:", data);
+        setAiRecipe(data.recipe);
+      } else if (response.status >= 400 && response.status < 500) {
+        console.log("CLIENT ERROR:", data);
+        setShowSnackbar(data.message);
+        setTimeout(() => setShowSnackbar(""), 3000);
+      } else if (response.status >= 500 && response.status < 600) {
+        console.log("SERVER ERROR:", data);
+        setShowSnackbar(data.message);
+        setTimeout(() => setShowSnackbar(""), 3000);
+      }
+    } catch (error) {
+      console.error("NETWORK ERROR:", error);
+      setShowSnackbar("Network Error occurred!");
+      setTimeout(() => setShowSnackbar(""), 3000);
+    }
+    setShowRecipeLoader(false);
+  };
+
+  const handleGenerateComic = async () => {
+    if (
+      (selectedTab == "custom" && !customRecipe.trim()) ||
+      (selectedTab == "ai" && !aiRecipe.trim())
+    ) {
+      setShowSnackbar("Please enter a recipe before submitting!");
+      setTimeout(() => setShowSnackbar(""), 3000);
+
+      return;
+    }
+
+    console.log("Calling the '/run-crew' API");
+    setShowComicLoader(true);
 
     try {
       const response = await fetch(
@@ -70,8 +123,10 @@ export default function Home() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ input_text: userInput }),
-          // body: userInput,
+          body: JSON.stringify({
+            input_text: selectedTab == "custom" ? customRecipe : aiRecipe,
+          }),
+          // body: customRecipe,
         }
       );
 
@@ -94,7 +149,7 @@ export default function Home() {
       setShowSnackbar("Network Error occurred!");
       setTimeout(() => setShowSnackbar(""), 3000);
     }
-    setShowLoader(false);
+    setShowComicLoader(false);
   };
 
   const downloadPDF = () => {
@@ -177,21 +232,53 @@ export default function Home() {
               </div>
 
               {/* Tab Content */}
-              <div className=" border-2 border-black border-t-0 bg-white h-[300px]">
+              <div className=" border-2 border-black border-t-0 bg-white h-[350px]">
                 {selectedTab === "custom" && (
                   <div className="h-full">
                     <textarea
                       placeholder="Write your custom recipe here..."
                       className="w-full h-full resize-none  rounded p-2 focus:outline-none "
-                      value={userInput}
-                      onChange={(e) => setUserInput(e.target.value)}
+                      value={customRecipe}
+                      onChange={(e) => setCustomRecipe(e.target.value)}
                     />
                   </div>
                 )}
                 {selectedTab === "ai" && (
-                  <div>
-                    {/* Replace with your AI recipe generation UI */}
-                    <p>This is the AI generated recipe interface.</p>
+                  <div className="p-4">
+                    <div className="flex justify-between items-center">
+                      <input
+                        type="text"
+                        value={dishName}
+                        onChange={(e) => setDishName(e.target.value)}
+                        placeholder="Name of any dish/meal"
+                        className="w-[68%] outline-none p-2 text-base border border-gray-300 rounded"
+                      />
+                      {showRecipeLoader ? (
+                        <Loader />
+                      ) : (
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleGenerateRecipe();
+                          }}
+                          className="underline font-semibold text-base text-yellow-400 hover:text-yellow-500 rounded cursor-pointer text-center block"
+                        >
+                          Generate Recipe
+                        </a>
+                      )}
+                    </div>
+
+                    {!!aiRecipe && (
+                      <div className="mt-4">
+                        <p className="underline italic">Generated Recipe:</p>
+                        <div className="overflow-y-scroll h-[220px] mt-2">
+                          <p className="text-gray-700 whitespace-pre-line">
+                            {aiRecipe}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -200,7 +287,7 @@ export default function Home() {
             {/* Generate Comic Button */}
             <button
               className="mt-6 ml-auto px-6 py-2 bg-yellow-400 text-black  border-2 border-black rounded hover:bg-yellow-300 transition cursor-pointer"
-              onClick={handleGenerate}
+              onClick={handleGenerateComic}
             >
               Generate Comic
             </button>
@@ -210,7 +297,7 @@ export default function Home() {
         {/* Comic poster section */}
         <div className="w-1/2 flex items-center justify-center">
           <div className="w-[70%] h-[90%] border-4 border-black text-white bg-gray-100 justify-between ">
-            {showLoader ? (
+            {showComicLoader ? (
               <div className="flex flex-col justify-center items-center h-[100%]">
                 <h4 className="text-1xl font-semibold text-black">
                   Generating Comic
