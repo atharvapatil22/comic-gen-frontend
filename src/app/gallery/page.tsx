@@ -4,16 +4,22 @@ import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useState } from "react";
 import Loader from "../components/Loader";
 
+type ComicItem = {
+  recipe_name: string;
+  preview_image_url: string;
+  created_at: string;
+};
+
 export default function GalleryPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [comicsList, setComicsList] = useState([]);
+  const [comicsList, setComicsList] = useState<ComicItem[]>([]);
 
   useEffect(() => {
     async function fetchComics() {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("workloads")
-        .select("id, recipe_name, preview_image_url");
+        .select("id,created_at, recipe_name, preview_image_url");
 
       if (error) {
         console.error("Error fetching comics:", error);
@@ -25,6 +31,15 @@ export default function GalleryPage() {
 
     fetchComics();
   }, []);
+
+  function formatDate(dateStr: string) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
 
   return (
     <main className="flex flex-col">
@@ -43,9 +58,26 @@ export default function GalleryPage() {
               {comicsList.map((item, index) => (
                 <div
                   key={index}
-                  className="h-48 w-full bg-blue-300 rounded-md shadow-sm flex items-center justify-center text-white font-semibold"
+                  className="w-full bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center space-y-2"
                 >
-                  Item {index + 1}
+                  <h3 className="text-lg font-semibold text-center text-black">
+                    {item.recipe_name}
+                  </h3>
+
+                  <div
+                    className="w-full relative"
+                    style={{ aspectRatio: "1024 / 1792" }}
+                  >
+                    <img
+                      src={item.preview_image_url}
+                      alt={`Preview of ${item.recipe_name}`}
+                      className="object-cover rounded-md w-full h-full"
+                    />
+                  </div>
+
+                  <p className="text-sm text-gray-500 text-center">
+                    Generated: {formatDate(item.created_at)}
+                  </p>
                 </div>
               ))}
             </div>
