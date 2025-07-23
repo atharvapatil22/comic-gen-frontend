@@ -17,15 +17,13 @@ export default function GalleryPage() {
 
   useEffect(() => {
     async function fetchComics() {
-      console.log("DEB 1");
       const supabase = getSupabaseClient();
-
-      console.log("DEB 2", supabase);
 
       setIsLoading(true);
       const { data, error } = await supabase
         .from("workloads")
-        .select("id,created_at, recipe_name, preview_image_url, comic_url");
+        .select("id,created_at, recipe_name, preview_image_url, comic_url")
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching comics:", error);
