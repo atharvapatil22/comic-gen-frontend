@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <nav className="w-full h-[70px] flex items-center justify-between px-6 border-b-4 shadow-sm bg text-black bg-gray-100">
+    <nav className="sticky top-0 z-50 w-full h-[60px] flex items-center justify-between px-6 border-b-4 shadow-sm bg text-black bg-gray-100">
       <h1 className="text-xl font-semibold">Recipe Comic Generator</h1>
 
       <div className="flex items-center gap-4">

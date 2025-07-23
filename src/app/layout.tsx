@@ -31,7 +31,7 @@ export default function RootLayout({
       >
         <main className="min-h-screen flex flex-col">
           {/* Background */}
-          <div className="absolute inset-0 bg-[url('/app_bg.png')] bg-cover bg-center opacity-70 -z-10" />
+          <div className="fixed inset-0 bg-[url('/app_bg.png')] bg-repeat-y bg-top bg-cover opacity-70 -z-10" />
 
           {/* Navbar as a client component */}
           <Navbar />

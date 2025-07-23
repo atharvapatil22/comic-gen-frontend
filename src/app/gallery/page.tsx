@@ -7,6 +7,7 @@ import Loader from "../components/Loader";
 type ComicItem = {
   recipe_name: string;
   preview_image_url: string;
+  comic_url: string;
   created_at: string;
 };
 
@@ -19,7 +20,7 @@ export default function GalleryPage() {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("workloads")
-        .select("id,created_at, recipe_name, preview_image_url");
+        .select("id,created_at, recipe_name, preview_image_url, comic_url");
 
       if (error) {
         console.error("Error fetching comics:", error);
@@ -46,7 +47,7 @@ export default function GalleryPage() {
       {/* Gallery page content */}
       <div className="flex flex-1 justify-center items-start py-10">
         <div className="w-full max-w-4xl border-4 border-black bg-gray-100 text-black p-6 shadow-md">
-          <h2 className="text-2xl font-bold mb-8">Gallery</h2>
+          <h2 className="text-2xl font-bold mb-4">Gallery</h2>
           {/* <p>This is where your generated comics will appear.</p> */}
 
           {isLoading ? (
@@ -58,22 +59,25 @@ export default function GalleryPage() {
               {comicsList.map((item, index) => (
                 <div
                   key={index}
-                  className="w-full bg-white rounded-xl shadow-md p-4 flex flex-col items-center justify-center space-y-2"
+                  className="w-full p-4 flex flex-col items-center justify-center space-y-2"
                 >
-                  <h3 className="text-lg font-semibold text-center text-black">
-                    {item.recipe_name}
-                  </h3>
-
                   <div
-                    className="w-full relative"
+                    onClick={() => {
+                      window.open(item.comic_url, "_blank");
+                    }}
+                    className="w-full relative hover:cursor-pointer"
                     style={{ aspectRatio: "1024 / 1792" }}
                   >
                     <img
                       src={item.preview_image_url}
                       alt={`Preview of ${item.recipe_name}`}
-                      className="object-cover rounded-md w-full h-full"
+                      className="object-cover w-full h-full"
                     />
                   </div>
+
+                  <h3 className="text-lg font-semibold text-center text-black mb-0">
+                    {item.recipe_name}
+                  </h3>
 
                   <p className="text-sm text-gray-500 text-center">
                     Generated: {formatDate(item.created_at)}
