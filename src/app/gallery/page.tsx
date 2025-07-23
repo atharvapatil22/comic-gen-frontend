@@ -1,6 +1,6 @@
 "use client";
 
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useEffect, useState } from "react";
 import Loader from "../components/Loader";
 
@@ -17,6 +17,8 @@ export default function GalleryPage() {
 
   useEffect(() => {
     async function fetchComics() {
+      const supabase = getSupabaseClient();
+
       setIsLoading(true);
       const { data, error } = await supabase
         .from("workloads")
