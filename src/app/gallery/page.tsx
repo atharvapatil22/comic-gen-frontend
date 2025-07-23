@@ -17,7 +17,10 @@ export default function GalleryPage() {
 
   useEffect(() => {
     async function fetchComics() {
+      console.log("DEB 1");
       const supabase = getSupabaseClient();
+
+      console.log("DEB 2", supabase);
 
       setIsLoading(true);
       const { data, error } = await supabase
