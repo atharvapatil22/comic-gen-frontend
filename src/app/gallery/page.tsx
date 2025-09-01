@@ -26,7 +26,7 @@ export default function GalleryPage() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching comics:", error);
+        console.error("Error fetching gallery comics:", error);
       } else {
         setComicsList(data);
       }

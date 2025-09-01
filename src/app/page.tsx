@@ -26,6 +26,7 @@ export default function Home() {
 
   const [similarComics, setSimilarComics] = useState<string[] | null>(null);
   const [showComicSelectionModal, setShowComicSelectionModal] = useState(false);
+  const [userChoiceCalled, setUserChoiceCalled] = useState(false);
 
   useEffect(() => {
     testConnection();
@@ -187,7 +188,7 @@ export default function Home() {
           "The input exceeds the image generation limit! Current limit is 20 images per workload."
         );
         setTimeout(() => setShowSnackbar(""), 3000);
-      } else if (currentStatus == "AWAITING_USER_CHOICE") {
+      } else if (!userChoiceCalled && currentStatus == "AWAITING_USER_CHOICE") {
         clearInterval(pollInterval); //Stop polling
         setSimilarComics(data[0].similar_comics);
         setShowComicSelectionModal(true);
@@ -413,6 +414,7 @@ export default function Home() {
           workloadId={workloadId}
           comicIds={similarComics}
           onClose={() => {
+            setUserChoiceCalled(true);
             pollDatabase(workloadId, 3000);
             setShowComicSelectionModal(false);
           }}
