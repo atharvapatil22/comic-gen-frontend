@@ -6,6 +6,7 @@ import { getSupabaseClient } from "@/lib/supabaseClient"; // adjust path if need
 interface ComicModalProps {
   comicIds: string[];
   workloadId: string;
+  onClose: () => void;
 }
 
 interface ComicData {
@@ -17,6 +18,7 @@ interface ComicData {
 export default function ComicSelectionModal({
   comicIds,
   workloadId,
+  onClose,
 }: ComicModalProps) {
   const [comics, setComics] = useState<ComicData[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -40,6 +42,39 @@ export default function ComicSelectionModal({
   };
 
   const handleSelect = (id: string) => setSelected(id);
+
+  const handleConfirmChoice = async () => {
+    console.log("Calling the '/workloads/:id/user-decision' API");
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/workloads/${workloadId}/user-decision`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            choice: selected === "new" ? "NEW" : "EXISTING",
+            selected_comic_id: selected === "new" ? null : selected,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("API response:", data);
+
+      onClose(); // close modal after successful API call
+    } catch (error) {
+      console.error("ERROR:", error);
+      // Optionally show a snackbar or alert to the user
+      // setShowSnackbar("Some Error occurred!");
+      // setTimeout(() => setShowSnackbar(""), 3000);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-20 backdrop-blur-sm">
@@ -138,7 +173,7 @@ export default function ComicSelectionModal({
               !selected ? "opacity-50 cursor-not-allowed" : ""
             }`}
             disabled={!selected}
-            onClick={() => console.log("Confirm choices clicked:", selected)}
+            onClick={handleConfirmChoice}
           >
             Confirm Choices
           </button>
