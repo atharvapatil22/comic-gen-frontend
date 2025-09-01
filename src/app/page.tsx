@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Loader from "./components/Loader";
 import { jsPDF } from "jspdf";
 import { getSupabaseClient } from "@/lib/supabaseClient";
+import ComicSelectionModal from "./components/ComicSelectionModal";
 
 export default function Home() {
   const [customRecipe, setCustomRecipe] = useState("");
@@ -19,17 +20,16 @@ export default function Home() {
   const [selectedTab, setSelectedTab] = useState("custom");
 
   const [showComicLoader, setShowComicLoader] = useState(false);
-  const [workloadId, setWorkloadId] = useState(null);
+  const [workloadId, setWorkloadId] = useState<string | null>(null);
   const [workflowStatus, setWorklowStatus] = useState(null);
   let pollInterval: number | undefined;
+
+  const [similarComics, setSimilarComics] = useState<string[] | null>(null);
+  const [showComicSelectionModal, setShowComicSelectionModal] = useState(false);
 
   useEffect(() => {
     testConnection();
   }, []);
-
-  useEffect(() => {
-    if (!!workloadId) pollDatabase();
-  }, [workloadId]);
 
   const testConnection = async () => {
     try {
@@ -140,6 +140,7 @@ export default function Home() {
 
       const data = await response.json();
       setWorkloadId(data.workload_id);
+      pollDatabase(data.workload_id, 3000);
     } catch (error) {
       console.error("NETWORK ERROR:", error);
       setShowSnackbar("Network Error occurred!");
@@ -148,33 +149,24 @@ export default function Home() {
     }
   };
 
-  const stopPolling = () => {
+  const endWorkload = () => {
     clearInterval(pollInterval);
-    setWorkloadId(null);
     setShowComicLoader(false);
   };
 
-  const pollDatabase = async (interval = 3000) => {
+  const pollDatabase = async (workloadId: string, interval = 3000) => {
     const supabase = getSupabaseClient();
     if (pollInterval) clearInterval(pollInterval);
 
     pollInterval = window.setInterval(async () => {
-      if (!workloadId) {
-        stopPolling();
-        console.error("Workflow id is null");
-        setShowSnackbar("Workflow id is null!");
-        setTimeout(() => setShowSnackbar(""), 3000);
-        return;
-      }
-
       const { data, error } = await supabase
         .from("workloads")
-        .select("public_id, status") // only select necessary fields
+        .select("public_id, status, similar_comics") // only select necessary fields
         .eq("public_id", workloadId);
 
       if (error) {
         console.error("Error polling workflow:", error);
-        stopPolling();
+        endWorkload();
         return;
       }
 
@@ -186,28 +178,24 @@ export default function Home() {
       setWorklowStatus(formatted);
 
       if (currentStatus == "FAILED_NOT_RECIPE") {
-        stopPolling();
+        endWorkload();
         setShowSnackbar("The input text does not resemble a recipe!");
         setTimeout(() => setShowSnackbar(""), 3000);
       } else if (currentStatus == "FAILED_OVERLIMIT") {
-        stopPolling();
+        endWorkload();
         setShowSnackbar(
           "The input exceeds the image generation limit! Current limit is 20 images per workload."
         );
         setTimeout(() => setShowSnackbar(""), 3000);
       } else if (currentStatus == "AWAITING_USER_CHOICE") {
-        const result = window.confirm(
-          "User choice prompt. Similar comics were found. Still proceed for new generation?"
-        );
-        if (result) {
-          console.log("User clicked OK");
-        } else {
-          console.log("User clicked Cancel");
-        }
+        clearInterval(pollInterval); //Stop polling
+        setSimilarComics(data[0].similar_comics);
+        setShowComicSelectionModal(true);
       } else if (
         currentStatus == "COMPLETED_W_EXISTING" ||
         currentStatus == "COMPLETED_W_NEW"
       ) {
+        endWorkload();
         console.log("STATUS COMPLETED");
       }
     }, interval);
@@ -418,6 +406,17 @@ export default function Home() {
         >
           {showSnackbar}
         </div>
+      )}
+
+      {!!showComicSelectionModal && !!similarComics && !!workloadId && (
+        <ComicSelectionModal
+          workloadId={workloadId}
+          comicIds={similarComics}
+          onClose={() => {
+            pollDatabase(workloadId, 3000);
+            setShowComicSelectionModal(false);
+          }}
+        />
       )}
     </div>
   );
