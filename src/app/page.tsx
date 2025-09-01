@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Loader from "./components/Loader";
 import { jsPDF } from "jspdf";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 
 export default function Home() {
   const [customRecipe, setCustomRecipe] = useState("");
@@ -10,7 +11,6 @@ export default function Home() {
   const [aiRecipe, setAiRecipe] = useState("");
 
   const [showSnackbar, setShowSnackbar] = useState("");
-  const [showComicLoader, setShowComicLoader] = useState(false);
   const [showRecipeLoader, setShowRecipeLoader] = useState(false);
   const [snackSuccess, setSnackSuccess] = useState(false);
 
@@ -18,9 +18,18 @@ export default function Home() {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [selectedTab, setSelectedTab] = useState("custom");
 
+  const [showComicLoader, setShowComicLoader] = useState(false);
+  const [workloadId, setWorkloadId] = useState(null);
+  const [workflowStatus, setWorklowStatus] = useState(null);
+  let pollInterval: number | undefined;
+
   useEffect(() => {
     testConnection();
   }, []);
+
+  useEffect(() => {
+    if (!!workloadId) pollDatabase();
+  }, [workloadId]);
 
   const testConnection = async () => {
     try {
@@ -112,12 +121,12 @@ export default function Home() {
       return;
     }
 
-    console.log("Calling the '/run-crew' API");
+    console.log("Calling the '/workloads' API");
     setShowComicLoader(true);
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/run-crew`,
+        `${process.env.NEXT_PUBLIC_API_URL}/workloads`,
         {
           method: "POST",
           headers: {
@@ -126,30 +135,82 @@ export default function Home() {
           body: JSON.stringify({
             input_text: selectedTab == "custom" ? customRecipe : aiRecipe,
           }),
-          // body: customRecipe,
         }
       );
 
       const data = await response.json();
-
-      if (response.ok) {
-        console.log("API Success:", data);
-        setComicPages(data.res);
-      } else if (response.status >= 400 && response.status < 500) {
-        console.log("CLIENT ERROR:", data);
-        setShowSnackbar(data.message);
-        setTimeout(() => setShowSnackbar(""), 3000);
-      } else if (response.status >= 500 && response.status < 600) {
-        console.log("SERVER ERROR:", data);
-        setShowSnackbar(data.message);
-        setTimeout(() => setShowSnackbar(""), 3000);
-      }
+      setWorkloadId(data.workload_id);
     } catch (error) {
       console.error("NETWORK ERROR:", error);
       setShowSnackbar("Network Error occurred!");
       setTimeout(() => setShowSnackbar(""), 3000);
+      setShowComicLoader(false);
     }
+  };
+
+  const stopPolling = () => {
+    clearInterval(pollInterval);
+    setWorkloadId(null);
     setShowComicLoader(false);
+  };
+
+  const pollDatabase = async (interval = 3000) => {
+    const supabase = getSupabaseClient();
+    if (pollInterval) clearInterval(pollInterval);
+
+    pollInterval = window.setInterval(async () => {
+      if (!workloadId) {
+        stopPolling();
+        console.error("Workflow id is null");
+        setShowSnackbar("Workflow id is null!");
+        setTimeout(() => setShowSnackbar(""), 3000);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("workloads")
+        .select("public_id, status") // only select necessary fields
+        .eq("public_id", workloadId);
+
+      if (error) {
+        console.error("Error polling workflow:", error);
+        stopPolling();
+        return;
+      }
+
+      const currentStatus = data[0].status;
+      const lower = currentStatus.toLowerCase();
+      const noUnderscores = lower.replace(/_/g, " ");
+      const formatted =
+        noUnderscores.charAt(0).toUpperCase() + noUnderscores.slice(1);
+      setWorklowStatus(formatted);
+
+      if (currentStatus == "FAILED_NOT_RECIPE") {
+        stopPolling();
+        setShowSnackbar("The input text does not resemble a recipe!");
+        setTimeout(() => setShowSnackbar(""), 3000);
+      } else if (currentStatus == "FAILED_OVERLIMIT") {
+        stopPolling();
+        setShowSnackbar(
+          "The input exceeds the image generation limit! Current limit is 20 images per workload."
+        );
+        setTimeout(() => setShowSnackbar(""), 3000);
+      } else if (currentStatus == "AWAITING_USER_CHOICE") {
+        const result = window.confirm(
+          "User choice prompt. Similar comics were found. Still proceed for new generation?"
+        );
+        if (result) {
+          console.log("User clicked OK");
+        } else {
+          console.log("User clicked Cancel");
+        }
+      } else if (
+        currentStatus == "COMPLETED_W_EXISTING" ||
+        currentStatus == "COMPLETED_W_NEW"
+      ) {
+        console.log("STATUS COMPLETED");
+      }
+    }, interval);
   };
 
   const downloadPDF = () => {
@@ -280,9 +341,9 @@ export default function Home() {
       <div className="w-1/2 flex items-center justify-center">
         <div className="w-[70%] h-[90%] border-4 border-black text-white bg-gray-100 justify-between ">
           {showComicLoader ? (
-            <div className="flex flex-col justify-center items-center h-[100%]">
-              <h4 className="text-1xl font-semibold text-black">
-                Generating Comic
+            <div className="flex flex-row justify-center items-center h-[100%]">
+              <h4 className="text-1xl font-semibold text-black mr-2">
+                {workflowStatus}
               </h4>
               <Loader />
             </div>
